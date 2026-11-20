@@ -298,7 +298,7 @@ def validar_datos_agenda(nombre: str, apellido: str, rut: str, correo: str, tele
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
     --p-950: #2e1065;
@@ -331,8 +331,8 @@ st.markdown("""
     color: var(--ink);
 }
 .block-container { padding-top: 1.2rem !important; padding-bottom: 3rem !important; max-width: 1180px; }
-h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; color: var(--ink); font-weight: 600; letter-spacing: -0.01em; }
-p, label, span, div { font-family: 'Plus Jakarta Sans', sans-serif; }
+h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; color: var(--ink); font-weight: 600; letter-spacing: -0.01em; font-style: normal !important; }
+p, label, span, div { font-family: 'Plus Jakarta Sans', sans-serif; font-style: normal !important; }
 
 /* Ocultar contadores de caracteres (ej. 0/9) */
 [data-testid="InputInstructions"],
@@ -415,7 +415,10 @@ div[data-baseweb="input"] + div,
     background: radial-gradient(circle, #fff 0%, rgba(255,255,255,0) 70%); }
 .hero-lila::after { width: 300px; height: 300px; left: -80px; bottom: -130px;
     background: radial-gradient(circle, #c4b5fd 0%, rgba(196,181,253,0) 70%); }
-.hero-inner { position: relative; z-index: 2; }
+.hero-inner {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+}
 .hero-eyebrow {
     display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
     color: var(--p-700); background: rgba(255,255,255,.7); border: 1px solid var(--p-200);
@@ -423,11 +426,11 @@ div[data-baseweb="input"] + div,
 }
 .hero-title {
     font-family: 'Cormorant Garamond', serif !important; font-size: 3.6rem !important; font-weight: 700 !important;
-    color: var(--p-950) !important; line-height: 1.08; max-width: 780px; margin: 0 auto .9rem auto !important;
+    color: var(--p-950) !important; line-height: 1.08; width: 100%; max-width: 780px; margin: 0 auto .9rem auto !important;
     font-style: normal !important; text-align: center !important;
 }
 .hero-subtitle {
-    display: block; font-size: 1rem; color: #5b4a73; max-width: 640px; margin: 0 auto 1.6rem auto;
+    display: block; width: 100%; font-size: 1rem; color: #5b4a73; max-width: 660px; margin: 0 auto 1.6rem auto;
     line-height: 1.65; text-align: center !important; font-style: normal !important;
 }
 .hero-badges { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
@@ -829,7 +832,7 @@ def encabezado(eyebrow, titulo, subtitulo=""):
 
 
 # ---------------------------------------------------------
-# IMÁGENES EMBEBIDAS EN EL MISMO CÓDIGO + CARRUSEL UNO A UNO
+# IMÁGENES EMBEBIDAS EN EL MISMO CÓDIGO + CARRUSEL VERTICAL
 # ---------------------------------------------------------
 SLIDE_SPECS = [
     ("IMG_2748.jpeg", "Pestañas y Diseño de Cejas", "Armonía y prolijidad en cada detalle", (245, 243, 255), (126, 34, 206)),
@@ -858,20 +861,20 @@ def _fuente(size):
 
 
 def _crear_imagen_base64_embebida(titulo, subtitulo, bg_rgb, accent_rgb):
-    w, hgt = 900, 560
+    w, hgt = 640, 860
     img = Image.new("RGB", (w, hgt), bg_rgb)
     draw = ImageDraw.Draw(img)
 
-    draw.ellipse([540, -90, 990, 360], fill=(255, 255, 255))
-    draw.ellipse([-120, 300, 360, 740], fill=(255, 255, 255))
-    draw.rounded_rectangle([28, 28, w - 28, hgt - 28], radius=26, outline=accent_rgb, width=3)
+    draw.ellipse([280, -90, 720, 350], fill=(255, 255, 255))
+    draw.ellipse([-120, 520, 360, 980], fill=(255, 255, 255))
+    draw.rounded_rectangle([24, 24, w - 24, hgt - 24], radius=26, outline=accent_rgb, width=3)
 
-    draw.rounded_rectangle([68, 72, 300, 116], radius=22, fill=accent_rgb)
-    draw.text((92, 84), "GLOSSY ROSSE", fill=(255, 255, 255), font=_fuente(20))
+    draw.rounded_rectangle([54, 64, 286, 108], radius=22, fill=accent_rgb)
+    draw.text((78, 76), "GLOSSY ROSSE", fill=(255, 255, 255), font=_fuente(20))
 
-    draw.text((68, 190), titulo, fill=accent_rgb, font=_fuente(44))
-    draw.text((68, 262), subtitulo, fill=(60, 40, 85), font=_fuente(24))
-    draw.text((68, 468), "Estética & Cosmetología · Coquimbo", fill=(107, 94, 130), font=_fuente(20))
+    draw.text((54, 290), titulo, fill=accent_rgb, font=_fuente(36))
+    draw.text((54, 350), subtitulo, fill=(60, 40, 85), font=_fuente(22))
+    draw.text((54, 750), "Estética & Cosmetología · Coquimbo", fill=(107, 94, 130), font=_fuente(19))
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
@@ -930,38 +933,38 @@ def render_carrusel_uno_a_uno(slides, intervalo_ms=3400):
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }}
-        body {{ background: transparent; }}
+        body {{ background: transparent; display: flex; justify-content: center; }}
         .stage {{
-            position: relative; width: 100%; height: 540px; border-radius: 24px; overflow: hidden;
+            position: relative; width: 100%; max-width: 440px; height: 620px; border-radius: 24px; overflow: hidden;
             border: 1px solid #e9defa; box-shadow: 0 14px 34px rgba(91, 33, 182, 0.14); background: #f3e8ff;
         }}
-        .stage img {{ width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.4s ease; }}
+        .stage img {{ width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; transition: opacity 0.4s ease; }}
         .caption-overlay {{
-            position: absolute; left: 0; right: 0; bottom: 0; padding: 2.8rem 1.5rem 1.2rem 1.5rem; color: #fff;
+            position: absolute; left: 0; right: 0; bottom: 0; padding: 2.8rem 1.4rem 1.15rem 1.4rem; color: #fff;
             background: linear-gradient(to top, rgba(46, 16, 101, 0.88), rgba(46, 16, 101, 0.35), transparent);
         }}
-        .caption-overlay h4 {{ font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 700; margin-bottom: 2px; }}
-        .caption-overlay p {{ font-size: 0.88rem; color: #ede9fe; }}
+        .caption-overlay h4 {{ font-family: 'Cormorant Garamond', serif; font-size: 1.65rem; font-weight: 700; margin-bottom: 2px; font-style: normal; }}
+        .caption-overlay p {{ font-size: 0.85rem; color: #ede9fe; font-style: normal; }}
         .arrow-btn {{
-            position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%;
+            position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%;
             border: 1px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.22); backdrop-filter: blur(6px);
-            color: #fff; font-size: 1.4rem; cursor: pointer; transition: background .2s;
+            color: #fff; font-size: 1.35rem; cursor: pointer; transition: background .2s;
         }}
         .arrow-btn:hover {{ background: rgba(126, 34, 206, 0.85); }}
-        .prev {{ left: 14px; }} .next {{ right: 14px; }}
+        .prev {{ left: 12px; }} .next {{ right: 12px; }}
         .counter {{
-            position: absolute; top: 14px; left: 16px; font-size: .75rem; font-weight: 600; color: #fff;
-            background: rgba(46, 16, 101, 0.45); padding: 4px 12px; border-radius: 999px;
+            position: absolute; top: 14px; left: 14px; font-size: .74rem; font-weight: 600; color: #fff;
+            background: rgba(46, 16, 101, 0.48); padding: 4px 11px; border-radius: 999px;
         }}
         .dots-row {{
-            position: absolute; top: 14px; right: 16px; display: flex; gap: 6px;
-            background: rgba(46, 16, 101, 0.4); padding: 6px 11px; border-radius: 999px;
+            position: absolute; top: 14px; right: 14px; display: flex; gap: 5px;
+            background: rgba(46, 16, 101, 0.42); padding: 6px 10px; border-radius: 999px;
         }}
-        .dot-btn {{ width: 8px; height: 8px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); cursor: pointer; transition: all .25s; }}
-        .dot-btn.active {{ width: 20px; border-radius: 999px; background: #d8b4fe; }}
+        .dot-btn {{ width: 7px; height: 7px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); cursor: pointer; transition: all .25s; }}
+        .dot-btn.active {{ width: 18px; border-radius: 999px; background: #d8b4fe; }}
         @media (max-width: 768px) {{
-            .stage {{ height: 390px; border-radius: 18px; }}
-            .caption-overlay h4 {{ font-size: 1.3rem; }}
+            .stage {{ max-width: 390px; height: 520px; border-radius: 20px; }}
+            .caption-overlay h4 {{ font-size: 1.35rem; }}
         }}
     </style>
     </head>
@@ -1029,7 +1032,7 @@ def render_carrusel_uno_a_uno(slides, intervalo_ms=3400):
     </body>
     </html>
     """
-    components.html(html_code, height=560)
+    components.html(html_code, height=640)
 
 
 # ---------------------------------------------------------
@@ -1109,9 +1112,7 @@ if vista == "Inicio":
     encabezado("Galería", "Nuestro trabajo",
                "Mira algunos de nuestros resultados en el estudio.")
 
-    _, col_gal_center, _ = st.columns([0.2, 4.6, 0.2])
-    with col_gal_center:
-        render_carrusel_uno_a_uno(construir_slides_en_codigo(), intervalo_ms=3400)
+    render_carrusel_uno_a_uno(construir_slides_en_codigo(), intervalo_ms=3400)
 
     encabezado("Servicios", "Elige tu próxima cita",
                "Todos nuestros servicios disponibles con duración y valor referencial.")
