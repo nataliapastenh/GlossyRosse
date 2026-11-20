@@ -63,8 +63,8 @@ def clp(valor) -> str:
 def icono_servicio(nombre: str) -> str:
     n = (nombre or "").lower()
     mapa = [
-        ("manicure", "💅"), ("uña", "💅"), ("pedicure", "🌸"), ("pesta", "✨"),
-        ("maquill", "💄"), ("facial", "🧖‍♀️"), ("limpieza", "🧖‍♀️"),
+        ("manicure", "💅"), ("uña", "💅"), ("pedicure", "🌸"), ("pedicura", "🌸"),
+        ("pesta", "✨"), ("maquill", "💄"), ("facial", "🧖‍♀️"), ("limpieza", "🧖‍♀️"),
         ("ceja", "🪞"), ("cap", "💜"), ("peinado", "💜"),
     ]
     for clave, emoji in mapa:
@@ -411,10 +411,11 @@ div[data-baseweb="input"] + div,
 .hero-title {
     font-family: 'Cormorant Garamond', serif !important; font-size: 3.6rem !important; font-weight: 700 !important;
     color: var(--p-950) !important; line-height: 1.08; max-width: 780px; margin: 0 auto .9rem auto !important;
+    font-style: normal !important;
 }
-.hero-title em { font-style: italic; color: var(--p-600); }
 .hero-subtitle {
-    font-size: 1rem; color: #5b4a73; max-width: 560px; margin: 0 auto 1.6rem auto; line-height: 1.65;
+    font-size: 1rem; color: #5b4a73; max-width: 620px; margin: 0 auto 1.6rem auto; line-height: 1.65;
+    text-align: center; font-style: normal !important;
 }
 .hero-badges { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
 .hero-badge {
@@ -817,7 +818,7 @@ SLIDE_SPECS = [
     ("IMG_3765.jpg", "French Pastel & Brillos", "Detalle delicado en tonos claros", (237, 233, 254), (91, 33, 182)),
     ("IMG_5535.jpg", "Extensiones de Pestañas", "Mirada definida y natural", (233, 213, 255), (59, 7, 100)),
     ("IMG_4972.jpg", "Manicure Efecto Perlado", "Reflejos nacarados en lila y rosa", (237, 233, 254), (107, 33, 168)),
-    ("IMG_5435.jpg", "Pedicure & Esmaltado", "Cuidado completo para tus pies", (243, 232, 255), (126, 34, 206)),
+    ("IMG_5435.jpg", "Pedicura & Esmaltado", "Cuidado completo para tus pies", (243, 232, 255), (126, 34, 206)),
     ("IMG_4914.jpg", "Manicure Clásico", "Brillo intenso y terminación impecable", (233, 213, 255), (88, 28, 135)),
     ("IMG_5923.jpg", "Maquillaje & Peinado", "Look luminoso para ocasiones especiales", (245, 243, 255), (76, 29, 149)),
 ]
@@ -1066,10 +1067,9 @@ if vista == "Inicio":
         <div class="hero-lila">
             <div class="hero-inner">
                 <div class="hero-eyebrow">Belleza &amp; Cuidado Personal</div>
-                <h1 class="hero-title">Realza tu <em>brillo natural</em></h1>
+                <h1 class="hero-title">Realza tu brillo natural</h1>
                 <p class="hero-subtitle">
-                    Maquillaje, limpiezas faciales, manicure, pedicure, extensiones de pestañas y
-                    tratamientos capilares, con atención personalizada.
+                    Maquillaje, limpiezas faciales, manicure, pedicura, extensiones de pestañas y tratamientos capilares, con atención personalizada.
                 </p>
                 <div class="hero-badges">
                     <span class="hero-badge">✨ Atención personalizada</span>
@@ -1159,13 +1159,6 @@ elif vista == "Agendar":
                 </div>
             </div>
         """), unsafe_allow_html=True)
-
-        if info_ok.get("correo_estado") == "enviado":
-            st.success(f"📧 {info_ok.get('correo_mensaje')}")
-        elif info_ok.get("correo_estado") == "no_configurado":
-            st.info(f"📧 Reserva registrada. {info_ok.get('correo_mensaje')}")
-        else:
-            st.warning(f"📧 Reserva registrada, pero hubo un aviso con el correo: {info_ok.get('correo_mensaje')}")
 
     servicios_db = run_query("SELECT id, nombre, precio, duracion_minutos FROM servicios ORDER BY id ASC")
     servicios_dict = {f"{s[1]} · {clp(s[2])} CLP ({s[3]} min)": s[0] for s in servicios_db}
@@ -1276,7 +1269,7 @@ elif vista == "Agendar":
 
                             run_query("UPDATE disponibilidades SET disponible = FALSE WHERE id = %s", (disp_id,), fetch=False)
 
-                            mail_ok, mail_estado, mail_msg = enviar_correo_confirmacion(
+                            enviar_correo_confirmacion(
                                 destinatario=correo_limpio,
                                 nombre_clienta=nombre_completo,
                                 codigo=codigo_reserva,
@@ -1292,8 +1285,6 @@ elif vista == "Agendar":
                                 "horario": horario_elegido,
                                 "correo": correo_limpio,
                                 "ubicacion": ubicacion_actual,
-                                "correo_estado": mail_estado,
-                                "correo_mensaje": mail_msg,
                             }
                             st.session_state["form_agenda_nonce"] += 1
                             st.rerun()
@@ -1309,8 +1300,6 @@ elif vista == "Agendar":
                 <h3>Antes de agendar</h3>
                 <p><strong>• Ventana de reserva:</strong> Bloques disponibles dentro de las próximas 2 semanas.</p>
                 <p><strong>• Ubicación:</strong> Se comparte al confirmar tu hora y en <strong>Mi reserva</strong>.</p>
-                <p><strong>• RUT:</strong> Hasta 9 caracteres (números y dígito verificador).</p>
-                <p><strong>• Teléfono:</strong> 9 dígitos (ej: 912345678).</p>
                 <p><strong>• Datos de transferencia:</strong> Consúltalos en <strong>Mi reserva</strong> con tu código.</p>
                 <p><strong>• Cambios de hora:</strong> Hasta 3 modificaciones por reserva.</p>
             </div>
