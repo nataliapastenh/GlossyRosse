@@ -25,7 +25,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-DIRECCION_STUDIO = "Alberto Castex Taborga Poniente 1475"
+DIRECCION_POR_DEFECTO = "Alberto Castex Taborga Poniente 1475"
 
 if "vista_actual" not in st.session_state:
     st.session_state["vista_actual"] = "Inicio"
@@ -73,10 +73,41 @@ def icono_servicio(nombre: str) -> str:
     return "✨"
 
 
+def _imagen_a_data_uri(ruta_archivo: str) -> str:
+    ext = os.path.splitext(ruta_archivo)[1].lower().lstrip(".")
+    mime = "jpeg" if ext in ("jpg", "jpeg") else ext
+    with open(ruta_archivo, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("utf-8")
+    return f"data:image/{mime};base64,{b64}"
+
+
+@st.cache_data
+def obtener_logo_data_uri():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    carpetas = [
+        os.path.join(base_dir, "assets", "galeria"),
+        os.path.join(base_dir, "assets"),
+        base_dir,
+    ]
+    for carpeta in carpetas:
+        if os.path.isdir(carpeta):
+            for fname in sorted(os.listdir(carpeta)):
+                if "logo" in fname.lower() and fname.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+                    return _imagen_a_data_uri(os.path.join(carpeta, fname))
+    return None
+
+
 # ---------------------------------------------------------
 # ENVÍO DE CORREO DE CONFIRMACIÓN A CLIENTAS
 # ---------------------------------------------------------
-def enviar_correo_confirmacion(destinatario: str, nombre_clienta: str, codigo: str, servicio: str, horario: str):
+def enviar_correo_confirmacion(
+    destinatario: str,
+    nombre_clienta: str,
+    codigo: str,
+    servicio: str,
+    horario: str,
+    direccion_estudio: str,
+):
     """
     Envía un correo de confirmación de reserva usando st.secrets["smtp"].
     Si no está configurado SMTP, devuelve (False, "no_configurado", detalle).
@@ -113,7 +144,7 @@ def enviar_correo_confirmacion(destinatario: str, nombre_clienta: str, codigo: s
         f"Código de reserva: {codigo}\n"
         f"Servicio: {servicio}\n"
         f"Fecha y hora: {horario}\n"
-        f"Dirección: {DIRECCION_STUDIO} · Coquimbo\n\n"
+        f"Ubicación: {direccion_estudio}\n\n"
         f"Para consultar ubicación y datos de transferencia, ve a Mi reserva e ingresa tu código.\n"
         f"Recuerda que puedes modificar tu hora hasta 3 veces por reserva.\n\n"
         f"¡Te esperamos!\nGlossy Rosse"
@@ -132,7 +163,7 @@ def enviar_correo_confirmacion(destinatario: str, nombre_clienta: str, codigo: s
           </div>
           <p><strong>Servicio:</strong> {esc(servicio)}</p>
           <p><strong>Fecha y hora:</strong> {esc(horario)}</p>
-          <p><strong>Dirección:</strong> {esc(DIRECCION_STUDIO)}</p>
+          <p><strong>Ubicación:</strong> {esc(direccion_estudio)}</p>
           <p style="font-size: 13px; color: #6b5b82; margin-top: 20px;">
             Para consultar ubicación y datos de transferencia, ingresa a <strong>Mi reserva</strong> con tu código.
           </p>
@@ -302,7 +333,7 @@ div[data-baseweb="input"] + div,
 }
 
 .st-key-topnav {
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.88);
     backdrop-filter: blur(10px);
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -310,12 +341,24 @@ div[data-baseweb="input"] + div,
     box-shadow: var(--shadow-sm);
     margin-bottom: 1.4rem;
 }
+.brand-box {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding-left: 0.4rem;
+}
+.brand-logo-img {
+    height: 40px;
+    width: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1.5px solid var(--p-300);
+}
 .brand-wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.65rem; font-weight: 700; line-height: 1.6;
+    font-size: 1.65rem; font-weight: 700; line-height: 1.3;
     background: linear-gradient(90deg, var(--p-700), var(--p-400));
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    padding-left: 0.5rem;
 }
 .st-key-topnav .stButton > button {
     background: transparent !important; color: var(--p-800) !important;
@@ -405,10 +448,6 @@ div[data-baseweb="input"] + div,
 .service-body { flex: 1; min-width: 0; }
 .service-name { font-weight: 700; font-size: .98rem; color: var(--ink); }
 .service-desc { font-size: .82rem; color: var(--ink-soft); margin-top: .15rem; }
-.service-price {
-    font-weight: 800; font-size: .95rem; color: var(--p-700);
-    background: var(--p-50); border: 1px solid var(--p-200); padding: .3rem .8rem; border-radius: 999px; white-space: nowrap;
-}
 
 .service-grid-card {
     background: #fff;
@@ -507,7 +546,6 @@ div[data-baseweb="input"] + div,
 .badge-mod { background: #fae8ff; color: #86198f; }
 .badge-cancel { background: #f1f1f4; color: #6b7280; }
 .badge-warn { background: #fef3c7; color: #92400e; }
-.badge-free { background: #f3e8ff; color: #7e22ce; }
 
 .code-chip {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -624,9 +662,11 @@ label p { font-weight: 600 !important; color: var(--p-900) !important; font-size
         border-radius: 20px;
         padding: 0.6rem 0.75rem;
     }
-    .brand-wordmark {
-        text-align: center;
+    .brand-box {
+        justify-content: center;
         padding-left: 0;
+    }
+    .brand-wordmark {
         font-size: 1.45rem;
     }
     .hero-title { font-size: 2.2rem !important; }
@@ -704,6 +744,37 @@ def run_query(query, parameters=(), fetch=True):
         except Exception:
             pass
         raise
+
+
+def asegurar_columna_ubicacion():
+    """Agrega ubicacion_estudio a administradores si aún no existe."""
+    try:
+        run_query(
+            "ALTER TABLE administradores ADD COLUMN IF NOT EXISTS ubicacion_estudio TEXT;",
+            fetch=False
+        )
+    except Exception:
+        pass
+
+
+asegurar_columna_ubicacion()
+
+
+def obtener_ubicacion_estudio() -> str:
+    """Devuelve la ubicación configurada en la base de datos o la dirección por defecto."""
+    try:
+        rows = run_query("""
+            SELECT ubicacion_estudio
+            FROM administradores
+            WHERE ubicacion_estudio IS NOT NULL AND TRIM(ubicacion_estudio) <> ''
+            ORDER BY id ASC
+            LIMIT 1
+        """)
+        if rows and rows[0][0]:
+            return str(rows[0][0]).strip()
+    except Exception:
+        pass
+    return DIRECCION_POR_DEFECTO
 
 
 def generar_codigo_reserva():
@@ -796,15 +867,10 @@ def construir_slides_en_codigo():
     for filename, titulo, subtitulo, bg_rgb, accent_rgb in SLIDE_SPECS:
         ruta_real = os.path.join(carpeta_local, filename)
         if os.path.isfile(ruta_real):
-            ext = os.path.splitext(filename)[1].lower().lstrip(".")
-            mime = "jpeg" if ext in ("jpg", "jpeg") else ext
-            with open(ruta_real, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-            src = f"data:image/{mime};base64,{b64}"
+            src = _imagen_a_data_uri(ruta_real)
             vistos.add(filename.lower())
             slides.append({"src": src, "title": titulo, "subtitle": subtitulo})
 
-    # Si no se encontraron archivos en assets/galeria, usar los embebidos
     if not slides:
         for filename, titulo, subtitulo, bg_rgb, accent_rgb in SLIDE_SPECS:
             slides.append({
@@ -814,14 +880,14 @@ def construir_slides_en_codigo():
             })
     elif os.path.isdir(carpeta_local):
         for fname in sorted(os.listdir(carpeta_local)):
-            if fname.lower() not in vistos and fname.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+            if (
+                fname.lower() not in vistos
+                and "logo" not in fname.lower()
+                and fname.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
+            ):
                 ruta_extra = os.path.join(carpeta_local, fname)
-                ext = os.path.splitext(fname)[1].lower().lstrip(".")
-                mime = "jpeg" if ext in ("jpg", "jpeg") else ext
-                with open(ruta_extra, "rb") as f:
-                    b64 = base64.b64encode(f.read()).decode("utf-8")
                 slides.append({
-                    "src": f"data:image/{mime};base64,{b64}",
+                    "src": _imagen_a_data_uri(ruta_extra),
                     "title": "Glossy Rosse",
                     "subtitle": "Atención personalizada · Coquimbo",
                 })
@@ -945,16 +1011,24 @@ def render_carrusel_uno_a_uno(slides, intervalo_ms=3400):
 
 
 # ---------------------------------------------------------
-# NAVEGACIÓN SUPERIOR + BARRA LATERAL
+# NAVEGACIÓN SUPERIOR CON LOGO + BARRA LATERAL
 # ---------------------------------------------------------
 def ir_a(vista_nueva):
     st.session_state["vista_actual"] = vista_nueva
 
 
+logo_uri = obtener_logo_data_uri()
+logo_html = f'<img class="brand-logo-img" src="{logo_uri}" alt="Logo Glossy Rosse" />' if logo_uri else ""
+
 with st.container(key="topnav"):
     nav_logo, nav_1, nav_2, nav_3, nav_4, nav_5 = st.columns([2.4, 1, 1.15, 1.15, 1, 1.5], vertical_alignment="center")
     with nav_logo:
-        st.markdown('<div class="brand-wordmark">Glossy Rosse</div>', unsafe_allow_html=True)
+        st.markdown(h(f"""
+            <div class="brand-box">
+                {logo_html}
+                <div class="brand-wordmark">Glossy Rosse</div>
+            </div>
+        """), unsafe_allow_html=True)
     for col, (clave, etiqueta) in zip([nav_1, nav_2, nav_3, nav_4, nav_5], VISTAS.items()):
         with col:
             activo = st.session_state["vista_actual"] == clave
@@ -965,8 +1039,10 @@ with st.container(key="topnav"):
             )
 
 with st.sidebar:
+    if logo_uri:
+        st.image(logo_uri, width=84)
     st.markdown("### Glossy Rosse")
-    st.caption(f"Belleza & Cuidado Personal · {DIRECCION_STUDIO}")
+    st.caption("Belleza & Cuidado Personal · Coquimbo")
     st.markdown("---")
     claves = list(VISTAS.keys())
     vista_sidebar = st.radio(
@@ -979,24 +1055,21 @@ with st.sidebar:
         st.rerun()
 
 vista = st.session_state["vista_actual"]
+ubicacion_actual = obtener_ubicacion_estudio()
 
 
 # ---------------------------------------------------------
-# VISTA 1: INICIO (CARRUSEL ARRIBA AL PRINCIPIO)
+# VISTA 1: INICIO (PRIMERO CAJA "REALZA TU BRILLO NATURAL" Y ABAJO CARRUSEL)
 # ---------------------------------------------------------
 if vista == "Inicio":
-    _, col_gal_top, _ = st.columns([1, 3, 1])
-    with col_gal_top:
-        render_carrusel_uno_a_uno(construir_slides_en_codigo(), intervalo_ms=3400)
-
-    st.markdown(h(f"""
+    st.markdown(h("""
         <div class="hero-lila">
             <div class="hero-inner">
                 <div class="hero-eyebrow">Belleza &amp; Cuidado Personal</div>
                 <h1 class="hero-title">Realza tu <em>brillo natural</em></h1>
                 <p class="hero-subtitle">
                     Maquillaje, limpiezas faciales, manicure, pedicure, extensiones de pestañas y
-                    tratamientos capilares, con atención personalizada en {esc(DIRECCION_STUDIO)}.
+                    tratamientos capilares, con atención personalizada.
                 </p>
                 <div class="hero-badges">
                     <span class="hero-badge">✨ Atención personalizada</span>
@@ -1011,6 +1084,13 @@ if vista == "Inicio":
     with col_btn_center:
         st.button("Agendar mi hora", key="hero_cta_btn", type="primary",
                   use_container_width=True, on_click=ir_a, args=("Agendar",))
+
+    encabezado("Galería", "Nuestro trabajo",
+               "Mira algunos de nuestros resultados en el estudio.")
+
+    _, col_gal_center, _ = st.columns([1, 3, 1])
+    with col_gal_center:
+        render_carrusel_uno_a_uno(construir_slides_en_codigo(), intervalo_ms=3400)
 
     encabezado("Servicios", "Elige tu próxima cita",
                "Todos nuestros servicios disponibles con duración y valor referencial.")
@@ -1072,7 +1152,7 @@ elif vista == "Agendar":
                 <div class="reserva-codigo-grande"><strong>{esc(info_ok['codigo'])}</strong></div>
                 <div style="color:#4a3b61; font-size:0.88rem; margin-top:.35rem;">
                     <strong>Servicio:</strong> {esc(info_ok['servicio'])} · <strong>Horario:</strong> {esc(info_ok['horario'])}<br>
-                    <strong>Dirección:</strong> {esc(DIRECCION_STUDIO)}
+                    <strong>Ubicación:</strong> {esc(info_ok['ubicacion'])}
                 </div>
                 <div style="color:#3b0764; font-size:0.86rem; margin-top:.45rem; background:#ffffff; padding:.6rem .8rem; border-radius:10px; border:1px solid #ddd6fe;">
                     Para consultar la <strong>ubicación</strong> y los <strong>datos de transferencia</strong>, ve a <strong>Mi reserva</strong> e ingresa tu <strong>código de reserva</strong> (<strong>{esc(info_ok['codigo'])}</strong>).
@@ -1201,7 +1281,8 @@ elif vista == "Agendar":
                                 nombre_clienta=nombre_completo,
                                 codigo=codigo_reserva,
                                 servicio=nombre_servicio,
-                                horario=horario_elegido
+                                horario=horario_elegido,
+                                direccion_estudio=ubicacion_actual,
                             )
 
                             st.session_state["ultima_reserva_ok"] = {
@@ -1210,6 +1291,7 @@ elif vista == "Agendar":
                                 "servicio": nombre_servicio,
                                 "horario": horario_elegido,
                                 "correo": correo_limpio,
+                                "ubicacion": ubicacion_actual,
                                 "correo_estado": mail_estado,
                                 "correo_mensaje": mail_msg,
                             }
@@ -1222,14 +1304,14 @@ elif vista == "Agendar":
                             st.error("Hubo un inconveniente al guardar tu reserva. Revisa que todos los datos estén correctos e inténtalo de nuevo.")
 
     with col_info:
-        st.markdown(h(f"""
+        st.markdown(h("""
             <div class="soft-panel panel-lila">
                 <h3>Antes de agendar</h3>
                 <p><strong>• Ventana de reserva:</strong> Bloques disponibles dentro de las próximas 2 semanas.</p>
-                <p><strong>• Dirección:</strong> {esc(DIRECCION_STUDIO)}.</p>
+                <p><strong>• Ubicación:</strong> Se comparte al confirmar tu hora y en <strong>Mi reserva</strong>.</p>
                 <p><strong>• RUT:</strong> Hasta 9 caracteres (números y dígito verificador).</p>
                 <p><strong>• Teléfono:</strong> 9 dígitos (ej: 912345678).</p>
-                <p><strong>• Ubicación y transferencia:</strong> Consúltalos en <strong>Mi reserva</strong> con tu código.</p>
+                <p><strong>• Datos de transferencia:</strong> Consúltalos en <strong>Mi reserva</strong> con tu código.</p>
                 <p><strong>• Cambios de hora:</strong> Hasta 3 modificaciones por reserva.</p>
             </div>
         """), unsafe_allow_html=True)
@@ -1299,7 +1381,7 @@ elif vista == "Reserva":
                             <div class="info-row"><span>Clienta</span><span>{esc(f"{cli_nombre} {cli_apellido}")}</span></div>
                             <div class="info-row"><span>Servicio</span><span>{esc(str(serv_nombre))}</span></div>
                             <div class="info-row"><span>Fecha y hora</span><span>{fecha_actual.strftime('%d/%m/%Y %H:%M')}</span></div>
-                            <div class="info-row"><span>Ubicación</span><span>{esc(DIRECCION_STUDIO)}</span></div>
+                            <div class="info-row"><span>Ubicación</span><span>{esc(ubicacion_actual)}</span></div>
                             <div class="info-row"><span>Modificaciones</span><span>{mod_count} / 3</span></div>
                             {bloque_banco_html}
                         </div>
@@ -1363,17 +1445,17 @@ elif vista == "Reserva":
 
 
 # ---------------------------------------------------------
-# VISTA 4: CONTACTO Y DATOS DE TRANSFERENCIA
+# VISTA 4: CONTACTO Y DATOS DE TRANSFERENCIA (SIN UBICACIÓN PÚBLICA)
 # ---------------------------------------------------------
 elif vista == "Contacto":
-    encabezado("Ubicación & Pagos", "Contacto", "Información del estudio y datos para transferencia.")
+    encabezado("Canales & Pagos", "Contacto", "Información de atención y datos para transferencia.")
     c_izq, c_der = st.columns(2, gap="large")
 
     with c_izq:
-        st.markdown(h(f"""
+        st.markdown(h("""
             <div class="soft-panel">
                 <h3>Glossy Rosse · Coquimbo</h3>
-                <div class="info-row"><span>Ubicación</span><span>{esc(DIRECCION_STUDIO)}</span></div>
+                <div class="info-row"><span>Ubicación</span><span>Se envía al reservar y en Mi reserva</span></div>
                 <div class="info-row"><span>Instagram</span><span>@glossyrosse_</span></div>
                 <div class="info-row"><span>Cambios de hora</span><span>Máximo 3 por reserva</span></div>
             </div>
@@ -1405,7 +1487,7 @@ elif vista == "Contacto":
 # VISTA 5: ACCESO MARTINA (PANEL DE ADMINISTRACIÓN)
 # ---------------------------------------------------------
 elif vista == "Admin":
-    encabezado("Administración", "Acceso Martina", "Gestión de agenda, clientas, servicios y datos bancarios.")
+    encabezado("Administración", "Acceso Martina", "Gestión de agenda, clientas, servicios, ubicación y datos bancarios.")
 
     if not st.session_state.get('auth', False):
         with st.form("login_admin"):
@@ -1448,7 +1530,7 @@ elif vista == "Admin":
             "📊 Dashboard & Ganancias",
             "👥 Clientes Registrados",
             "📅 Gestionar Horarios & Calendario (2 Semanas)",
-            "⚙️ Ajustes, Precios y Datos Bancarios"
+            "⚙️ Ajustes, Ubicación y Datos Bancarios"
         ])
 
         with tab1:
@@ -1690,6 +1772,25 @@ elif vista == "Admin":
                                     st.rerun()
 
         with tab4:
+            st.markdown("#### Ubicación Privada para Clientas que Reserven")
+            with st.form("form_ubicacion_admin"):
+                nueva_ubicacion = st.text_input(
+                    "Dirección de atención (solo visible al confirmar reserva y en Mi reserva)",
+                    value=ubicacion_actual
+                )
+                if st.form_submit_button("Guardar Ubicación", type="primary"):
+                    if not nueva_ubicacion.strip():
+                        st.error("Ingresa una dirección válida.")
+                    else:
+                        run_query(
+                            "UPDATE administradores SET ubicacion_estudio = %s;",
+                            (nueva_ubicacion.strip(),),
+                            fetch=False
+                        )
+                        st.success("Ubicación actualizada correctamente.")
+                        st.rerun()
+
+            st.markdown("---")
             st.markdown("#### Precios y Duración de Servicios")
             servs = run_query("SELECT id, nombre, precio, duracion_minutos FROM servicios ORDER BY id ASC")
             for s in servs:
@@ -1749,8 +1850,8 @@ elif vista == "Admin":
 # ---------------------------------------------------------
 # PIE DE PÁGINA
 # ---------------------------------------------------------
-st.markdown(h(f"""
+st.markdown(h("""
     <div class="site-footer">
-        <strong>Glossy Rosse</strong> · Belleza &amp; Cuidado Personal · {esc(DIRECCION_STUDIO)}
+        <strong>Glossy Rosse</strong> · Belleza &amp; Cuidado Personal · Coquimbo
     </div>
 """), unsafe_allow_html=True)
