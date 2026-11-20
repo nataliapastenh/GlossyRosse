@@ -265,10 +265,11 @@ st.markdown(
 # -----------------------------------------------------------------------------
 def get_db_connection():
     pg = st.secrets["postgres"]
+    nombre_bd = pg.get("database") or pg.get("dbname") or pg.get("db_name") or "postgres"
     return psycopg2.connect(
         host=pg["host"],
         port=int(pg.get("port", 5432)),
-        dbname=pg["dbname"],
+        dbname=nombre_bd,
         user=pg["user"],
         password=pg["password"],
         sslmode=pg.get("sslmode", "require"),
