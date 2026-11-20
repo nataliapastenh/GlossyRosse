@@ -1425,21 +1425,47 @@ elif vista == "Reserva":
                                         else:
                                             nuevo_contador = mod_count + 1
 
+                                            # Liberar siempre el bloque anterior
                                             if disp_actual_id:
-                                                run_query("UPDATE disponibilidades SET disponible = TRUE WHERE id = %s", (disp_actual_id,), fetch=False)
-                                            run_query("UPDATE disponibilidades SET disponible = FALSE WHERE id = %s", (nuevo_disp_id,), fetch=False)
-
-                                            run_query("""
-                                                UPDATE reservas 
-                                                SET disponibilidad_id = %s, fecha_hora = %s, contador_modificaciones = %s, estado = 'Modificada' 
-                                                WHERE id = %s
-                                            """, (nuevo_disp_id, nueva_fecha_hora, nuevo_contador, reserva_id), fetch=False)
+                                                run_query(
+                                                    "UPDATE disponibilidades SET disponible = TRUE WHERE id = %s",
+                                                    (disp_actual_id,),
+                                                    fetch=False
+                                                )
 
                                             if nuevo_contador >= 3:
+                                                # En la 3.ª modificación: se cancela la reserva, no se ocupa el nuevo bloque,
+                                                # se descuenta de ganancias y se sanciona por 7 días
+                                                run_query("""
+                                                    UPDATE reservas
+                                                    SET disponibilidad_id = NULL,
+                                                        contador_modificaciones = %s,
+                                                        estado = 'Cancelada'
+                                                    WHERE id = %s
+                                                """, (nuevo_contador, reserva_id), fetch=False)
+
                                                 sancion = datetime.now() + timedelta(days=7)
-                                                run_query("UPDATE clientes SET sancionado_hasta = %s WHERE id = %s", (sancion, cli_id), fetch=False)
-                                                st.warning("Alcanzaste el límite de 3 modificaciones. Quedarás sin poder agendar nuevas horas por 1 semana.")
+                                                run_query(
+                                                    "UPDATE clientes SET sancionado_hasta = %s WHERE id = %s",
+                                                    (sancion, cli_id),
+                                                    fetch=False
+                                                )
+                                                st.warning(
+                                                    "Alcanzaste el límite de 3 modificaciones. La reserva fue anulada automáticamente, "
+                                                    "el horario quedó liberado y no podrás agendar nuevas horas por 1 semana."
+                                                )
                                             else:
+                                                # 1.ª y 2.ª modificación: ocupa el nuevo bloque y actualiza la reserva
+                                                run_query(
+                                                    "UPDATE disponibilidades SET disponible = FALSE WHERE id = %s",
+                                                    (nuevo_disp_id,),
+                                                    fetch=False
+                                                )
+                                                run_query("""
+                                                    UPDATE reservas 
+                                                    SET disponibilidad_id = %s, fecha_hora = %s, contador_modificaciones = %s, estado = 'Modificada' 
+                                                    WHERE id = %s
+                                                """, (nuevo_disp_id, nueva_fecha_hora, nuevo_contador, reserva_id), fetch=False)
                                                 st.success(f"¡Hora reagendada! Te quedan {3 - nuevo_contador} modificaciones disponibles.")
                                             st.rerun()
                                 else:
