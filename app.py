@@ -84,10 +84,19 @@ def _imagen_a_data_uri(ruta_archivo: str) -> str:
 @st.cache_data
 def obtener_logo_data_uri():
     base_dir = os.path.dirname(os.path.abspath(__file__))
+    candidatos_prioritarios = [
+        os.path.join(base_dir, "logoglossy.png"),
+        os.path.join(base_dir, "assets", "logoglossy.png"),
+        os.path.join(base_dir, "assets", "galeria", "logoglossy.png"),
+    ]
+    for ruta in candidatos_prioritarios:
+        if os.path.isfile(ruta):
+            return _imagen_a_data_uri(ruta)
+
     carpetas = [
-        os.path.join(base_dir, "assets", "galeria"),
-        os.path.join(base_dir, "assets"),
         base_dir,
+        os.path.join(base_dir, "assets"),
+        os.path.join(base_dir, "assets", "galeria"),
     ]
     for carpeta in carpetas:
         if os.path.isdir(carpeta):
@@ -333,32 +342,36 @@ div[data-baseweb="input"] + div,
 }
 
 .st-key-topnav {
-    background: rgba(255,255,255,0.88);
+    background: rgba(255,255,255,0.92);
     backdrop-filter: blur(10px);
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 0.45rem 0.9rem;
+    padding: 0.5rem 1rem;
     box-shadow: var(--shadow-sm);
     margin-bottom: 1.4rem;
 }
 .brand-box {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.65rem;
-    padding-left: 0.4rem;
+    width: 100%;
+    padding: 0.1rem 0.25rem;
 }
 .brand-logo-img {
-    height: 40px;
-    width: 40px;
+    height: 42px;
+    width: 42px;
+    flex: 0 0 42px;
     object-fit: cover;
     border-radius: 50%;
     border: 1.5px solid var(--p-300);
 }
 .brand-wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.65rem; font-weight: 700; line-height: 1.3;
+    font-size: 1.65rem; font-weight: 700; line-height: 1.2;
     background: linear-gradient(90deg, var(--p-700), var(--p-400));
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    white-space: nowrap;
 }
 .st-key-topnav .stButton > button {
     background: transparent !important; color: var(--p-800) !important;
@@ -411,11 +424,11 @@ div[data-baseweb="input"] + div,
 .hero-title {
     font-family: 'Cormorant Garamond', serif !important; font-size: 3.6rem !important; font-weight: 700 !important;
     color: var(--p-950) !important; line-height: 1.08; max-width: 780px; margin: 0 auto .9rem auto !important;
-    font-style: normal !important;
+    font-style: normal !important; text-align: center !important;
 }
 .hero-subtitle {
-    font-size: 1rem; color: #5b4a73; max-width: 620px; margin: 0 auto 1.6rem auto; line-height: 1.65;
-    text-align: center; font-style: normal !important;
+    display: block; font-size: 1rem; color: #5b4a73; max-width: 640px; margin: 0 auto 1.6rem auto;
+    line-height: 1.65; text-align: center !important; font-style: normal !important;
 }
 .hero-badges { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
 .hero-badge {
@@ -436,7 +449,7 @@ div[data-baseweb="input"] + div,
 .page-head { margin-top: .4rem; }
 
 .service-item-card {
-    display: flex; align-items: center; gap: 1rem;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.9rem;
     background: #fff; border: 1px solid var(--line); border-radius: 16px;
     padding: 1rem 1.2rem; margin-bottom: .75rem; box-shadow: var(--shadow-sm);
     transition: all .2s ease;
@@ -446,9 +459,9 @@ div[data-baseweb="input"] + div,
     flex: 0 0 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--p-100), var(--lilac-soft)); font-size: 1.3rem;
 }
-.service-body { flex: 1; min-width: 0; }
-.service-name { font-weight: 700; font-size: .98rem; color: var(--ink); }
-.service-desc { font-size: .82rem; color: var(--ink-soft); margin-top: .15rem; }
+.service-body { flex: 1 1 220px; min-width: 0; }
+.service-name { font-weight: 700; font-size: .98rem; color: var(--ink); overflow-wrap: anywhere; word-break: break-word; }
+.service-desc { font-size: .82rem; color: var(--ink-soft); margin-top: .2rem; line-height: 1.45; overflow-wrap: anywhere; word-break: break-word; }
 
 .service-grid-card {
     background: #fff;
@@ -542,7 +555,7 @@ div[data-baseweb="input"] + div,
 .step-title { font-weight: 700; color: var(--p-900); margin-bottom: .3rem; }
 .step-text { font-size: .85rem; color: var(--ink-soft); line-height: 1.55; }
 
-.badge { display: inline-block; font-size: .72rem; font-weight: 700; padding: .22rem .7rem; border-radius: 999px; }
+.badge { display: inline-block; font-size: .72rem; font-weight: 700; padding: .22rem .7rem; border-radius: 999px; max-width: 100%; }
 .badge-ok { background: #ede9fe; color: #5b21b6; }
 .badge-mod { background: #fae8ff; color: #86198f; }
 .badge-cancel { background: #f1f1f4; color: #6b7280; }
@@ -660,21 +673,29 @@ label p { font-weight: 600 !important; color: var(--p-900) !important; font-size
         min-width: 100% !important;
     }
     .st-key-topnav {
-        border-radius: 20px;
-        padding: 0.6rem 0.75rem;
+        border-radius: 22px;
+        padding: 0.65rem 0.8rem;
     }
     .brand-box {
         justify-content: center;
+        align-items: center;
+        width: 100%;
         padding-left: 0;
     }
     .brand-wordmark {
-        font-size: 1.45rem;
+        font-size: 1.5rem;
     }
     .hero-title { font-size: 2.2rem !important; }
+    .hero-subtitle { font-size: 0.94rem; text-align: center !important; }
     .hero-lila { padding: 2.4rem 1.1rem 2rem 1.1rem; border-radius: 20px; }
     .section-heading { font-size: 1.85rem !important; }
     .soft-panel, [data-testid="stForm"], .reserva-banner-ok {
         padding: 1.1rem 1rem !important;
+    }
+    .service-item-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.65rem;
     }
     .reserva-codigo-grande {
         font-size: 1.25rem;
@@ -911,36 +932,36 @@ def render_carrusel_uno_a_uno(slides, intervalo_ms=3400):
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }}
         body {{ background: transparent; }}
         .stage {{
-            position: relative; width: 100%; height: 420px; border-radius: 24px; overflow: hidden;
+            position: relative; width: 100%; height: 540px; border-radius: 24px; overflow: hidden;
             border: 1px solid #e9defa; box-shadow: 0 14px 34px rgba(91, 33, 182, 0.14); background: #f3e8ff;
         }}
         .stage img {{ width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.4s ease; }}
         .caption-overlay {{
-            position: absolute; left: 0; right: 0; bottom: 0; padding: 2.6rem 1.4rem 1.1rem 1.4rem; color: #fff;
+            position: absolute; left: 0; right: 0; bottom: 0; padding: 2.8rem 1.5rem 1.2rem 1.5rem; color: #fff;
             background: linear-gradient(to top, rgba(46, 16, 101, 0.88), rgba(46, 16, 101, 0.35), transparent);
         }}
-        .caption-overlay h4 {{ font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 2px; }}
-        .caption-overlay p {{ font-size: 0.84rem; color: #ede9fe; }}
+        .caption-overlay h4 {{ font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 700; margin-bottom: 2px; }}
+        .caption-overlay p {{ font-size: 0.88rem; color: #ede9fe; }}
         .arrow-btn {{
-            position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%;
+            position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%;
             border: 1px solid rgba(255,255,255,0.6); background: rgba(255,255,255,0.22); backdrop-filter: blur(6px);
-            color: #fff; font-size: 1.3rem; cursor: pointer; transition: background .2s;
+            color: #fff; font-size: 1.4rem; cursor: pointer; transition: background .2s;
         }}
         .arrow-btn:hover {{ background: rgba(126, 34, 206, 0.85); }}
-        .prev {{ left: 12px; }} .next {{ right: 12px; }}
+        .prev {{ left: 14px; }} .next {{ right: 14px; }}
         .counter {{
-            position: absolute; top: 12px; left: 14px; font-size: .72rem; font-weight: 600; color: #fff;
-            background: rgba(46, 16, 101, 0.45); padding: 4px 11px; border-radius: 999px;
+            position: absolute; top: 14px; left: 16px; font-size: .75rem; font-weight: 600; color: #fff;
+            background: rgba(46, 16, 101, 0.45); padding: 4px 12px; border-radius: 999px;
         }}
         .dots-row {{
-            position: absolute; top: 12px; right: 14px; display: flex; gap: 5px;
-            background: rgba(46, 16, 101, 0.4); padding: 6px 10px; border-radius: 999px;
+            position: absolute; top: 14px; right: 16px; display: flex; gap: 6px;
+            background: rgba(46, 16, 101, 0.4); padding: 6px 11px; border-radius: 999px;
         }}
-        .dot-btn {{ width: 7px; height: 7px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); cursor: pointer; transition: all .25s; }}
-        .dot-btn.active {{ width: 18px; border-radius: 999px; background: #d8b4fe; }}
+        .dot-btn {{ width: 8px; height: 8px; border-radius: 50%; border: none; background: rgba(255,255,255,0.5); cursor: pointer; transition: all .25s; }}
+        .dot-btn.active {{ width: 20px; border-radius: 999px; background: #d8b4fe; }}
         @media (max-width: 768px) {{
-            .stage {{ height: 300px; border-radius: 18px; }}
-            .caption-overlay h4 {{ font-size: 1.25rem; }}
+            .stage {{ height: 390px; border-radius: 18px; }}
+            .caption-overlay h4 {{ font-size: 1.3rem; }}
         }}
     </style>
     </head>
@@ -1008,7 +1029,7 @@ def render_carrusel_uno_a_uno(slides, intervalo_ms=3400):
     </body>
     </html>
     """
-    components.html(html_code, height=440)
+    components.html(html_code, height=560)
 
 
 # ---------------------------------------------------------
@@ -1088,7 +1109,7 @@ if vista == "Inicio":
     encabezado("Galería", "Nuestro trabajo",
                "Mira algunos de nuestros resultados en el estudio.")
 
-    _, col_gal_center, _ = st.columns([1, 3, 1])
+    _, col_gal_center, _ = st.columns([0.2, 4.6, 0.2])
     with col_gal_center:
         render_carrusel_uno_a_uno(construir_slides_en_codigo(), intervalo_ms=3400)
 
@@ -1179,14 +1200,11 @@ elif vista == "Agendar":
     with col_form:
         with st.form(f"form_cliente_{nonce}", clear_on_submit=False):
             st.markdown("##### Tus datos")
-            c1, c2 = st.columns(2)
-            with c1:
-                nombre = st.text_input("Nombre", max_chars=50, key=f"ag_nombre_{nonce}")
-                rut = st.text_input("RUT", placeholder="123456789", max_chars=9, key=f"ag_rut_{nonce}")
-                telefono = st.text_input("Teléfono", placeholder="912345678", max_chars=9, key=f"ag_tel_{nonce}")
-            with c2:
-                apellido = st.text_input("Apellido", max_chars=50, key=f"ag_apellido_{nonce}")
-                correo = st.text_input("Correo electrónico", placeholder="tucorreo@ejemplo.com", max_chars=100, key=f"ag_correo_{nonce}")
+            nombre = st.text_input("Nombre", max_chars=50, key=f"ag_nombre_{nonce}")
+            apellido = st.text_input("Apellido", max_chars=50, key=f"ag_apellido_{nonce}")
+            rut = st.text_input("RUT", placeholder="123456789", max_chars=9, key=f"ag_rut_{nonce}")
+            correo = st.text_input("Correo electrónico", placeholder="tucorreo@ejemplo.com", max_chars=100, key=f"ag_correo_{nonce}")
+            telefono = st.text_input("Teléfono", placeholder="912345678", max_chars=9, key=f"ag_tel_{nonce}")
 
             st.markdown("##### Tu cita")
             s1, s2 = st.columns(2)
