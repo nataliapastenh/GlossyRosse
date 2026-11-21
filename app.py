@@ -18,9 +18,21 @@ from PIL import Image, ImageDraw, ImageFont
 # ---------------------------------------------------------
 # CONFIGURACIÓN GENERAL (RNF01 y RNF02)
 # ---------------------------------------------------------
+_base_dir_icono = os.path.dirname(os.path.abspath(__file__))
+_logo_icono_candidatos = [
+    os.path.join(_base_dir_icono, "logoglossy.png"),
+    os.path.join(_base_dir_icono, "assets", "logoglossy.png"),
+    os.path.join(_base_dir_icono, "assets", "galeria", "logoglossy.png"),
+]
+_icono_app = "✨"
+for _ruta_logo_icono in _logo_icono_candidatos:
+    if os.path.isfile(_ruta_logo_icono):
+        _icono_app = Image.open(_ruta_logo_icono)
+        break
+
 st.set_page_config(
     page_title="Glossy Rosse · Belleza & Cuidado Personal",
-    page_icon="✨",
+    page_icon=_icono_app,
     layout="wide",
     initial_sidebar_state="collapsed"
 )
